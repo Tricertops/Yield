@@ -44,7 +44,7 @@
 }
 
 - (id)heavyTask {
-    for (NSUInteger i = 0; i < 200; i ++) {
+    for (NSUInteger i = 0; i < 2000; i ++) {
         [NSDateFormatter new];
     }
     return [NSDateFormatter new];
@@ -66,16 +66,15 @@ const NSUInteger YielderTestCount = 1000;
     }
 }
 
-- (void)buildArray {
+- (NSArray *)buildArray {
     NSMutableArray *array = [NSMutableArray new];
     for (NSUInteger index = 0; index < YielderTestCount; index ++) {
         [array addObject:[self heavyTask]];
     }
-    yield array;
+    return array;
 }
 
 - (void)test_speedOfYield_enumeration {
-    dispatch_qos_class_t qos = qos_class_self();
     __block NSUInteger count = 0;
     [self measureBlock:^{
         count = 0;
@@ -85,42 +84,34 @@ const NSUInteger YielderTestCount = 1000;
         }
     }];
     XCTAssertEqual(count, YielderTestCount);
-    XCTAssertEqual(qos_class_self(), qos);
 }
 
 - (void)test_speedOfYield_collection {
-    dispatch_qos_class_t qos = qos_class_self();
     __block NSArray *array = nil;
     [self measureBlock:^{
         array = Yield(self, produceObjects).allObjects;
     }];
     XCTAssertEqual(array.count, YielderTestCount);
-    XCTAssertEqual(qos_class_self(), qos);
 }
 
 - (void)test_speedOfArray_enumeration {
-    dispatch_qos_class_t qos = qos_class_self();
     __block NSUInteger count = 0;
     [self measureBlock:^{
         count = 0;
-        NSArray *array = Yield(self, buildArray).nextObject; // This way it’s built on another queue.
-        for (id object in array) {
+        for (id object in [self buildArray]) {
             [object self];
             count ++;
         }
     }];
     XCTAssertEqual(count, YielderTestCount);
-    XCTAssertEqual(qos_class_self(), qos);
 }
 
 - (void)test_speedOfArray_collection {
-    dispatch_qos_class_t qos = qos_class_self();
     __block NSArray *array = nil;
     [self measureBlock:^{
-        array = Yield(self, buildArray).nextObject; // This way it’s built on another queue.
+        array = [self buildArray];
     }];
     XCTAssertEqual(array.count, YielderTestCount);
-    XCTAssertEqual(qos_class_self(), qos);
 }
 
 @end

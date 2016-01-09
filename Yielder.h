@@ -12,9 +12,16 @@
 
 @interface Yielder<T> : NSEnumerator
 
-- (instancetype)initWithBlock:(void (^)(Yielder *))block;
-- (void)setYield:(T)value;
+- (instancetype)initWithTarget:(NSObject *)target block:(void (^)(id))block;
++ (void)setObject:(id)object forKeyedSubscript:(id)key;
 
 @end
 
-#define yield   (yielder.yield) = 
+#define Yield(target, invocation) \
+    ((NSEnumerator *)({ \
+        [[Yielder alloc] initWithTarget:target block:^(typeof(target) innerTarget) { \
+            [innerTarget invocation]; \
+        }]; \
+    }))
+
+#define yield   Yielder.self[(id)self] = 

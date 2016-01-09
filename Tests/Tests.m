@@ -31,20 +31,44 @@
 }
 
 - (void)test_yielding {
-    for (NSString *letter in Yield(self, produceLetters)) {
+    NSEnumerator *enumerator = Yield(self, produceLetters);
+    for (NSString *letter in enumerator) {
         [self.recording appendString:letter];
     }
     XCTAssertEqualObjects(self.recording, @"ABCDEF");
+    
+    __weak NSEnumerator *weakEnumerator = enumerator;
+    enumerator = nil;
+    XCTAssertNil(weakEnumerator, @"Should be deallocated.");
+}
+
+- (void)test_yielding_interrupted {
+    NSEnumerator *enumerator = Yield(self, produceLetters);
+    for (NSString *letter in enumerator) {
+        [self.recording appendString:letter];
+        if (self.recording.length >= 4)
+            break;
+    }
+    XCTAssertEqualObjects(self.recording, @"ABCD");
+    
+    __weak NSEnumerator *weakEnumerator = enumerator;
+    enumerator = nil;
+    XCTAssertNil(weakEnumerator, @"Should be deallocated.");
 }
 
 - (void)test_collecting {
-    NSArray *objects = Yield(self, produceLetters).allObjects;
+    NSEnumerator *enumerator = Yield(self, produceLetters);
+    NSArray *objects = enumerator.allObjects;
     XCTAssertEqualObjects(self.recording, @"ACE");
     XCTAssertEqualObjects([objects componentsJoinedByString:@""], @"BDF");
+    
+    __weak NSEnumerator *weakEnumerator = enumerator;
+    enumerator = nil;
+    XCTAssertNil(weakEnumerator, @"Should be deallocated.");
 }
 
 - (id)heavyTask {
-    for (NSUInteger i = 0; i < 2000; i ++) {
+    for (NSUInteger i = 0; i < 200; i ++) {
         [NSDateFormatter new];
     }
     return [NSDateFormatter new];

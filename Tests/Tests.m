@@ -115,6 +115,29 @@ const NSUInteger YielderTestLightCount = 100000;
     }];
 }
 
+- (void)test_light_yield_enumeration_interrupted {
+    [self measureBlock:^{
+        NSUInteger passed = 0;
+        for (id object in Yield(self, produceLightObjects)) {
+            [object self];
+            passed ++;
+            if (passed > YielderTestLightCount/2)
+                break;
+        }
+    }];
+}
+- (void)test_light_array_enumeration_interrupted {
+    [self measureBlock:^{
+        NSUInteger passed = 0;
+        for (id object in [self buildLightArray]) {
+            [object self];
+            passed ++;
+            if (passed > YielderTestLightCount/2)
+                break;
+        }
+    }];
+}
+
 - (void)test_light_yield_collection {
     [self measureBlock:^{
         __unused NSArray *array = Yield(self, produceLightObjects).allObjects;
@@ -170,6 +193,29 @@ const NSUInteger YielderTestHeavyCount = 1000;
     [self measureBlock:^{
         for (id object in [self buildHeavyArray]) {
             [object self];
+        }
+    }];
+}
+
+- (void)test_heavy_yield_enumeration_interrupted {
+    [self measureBlock:^{
+        NSUInteger passed = 0;
+        for (id object in Yield(self, produceHeavyObjects)) {
+            [object self];
+            passed ++;
+            if (passed > YielderTestHeavyCount/2)
+                break;
+        }
+    }];
+}
+- (void)test_heavy_array_enumeration_interrupted {
+    [self measureBlock:^{
+        NSUInteger passed = 0;
+        for (id object in [self buildHeavyArray]) {
+            [object self];
+            passed ++;
+            if (passed > YielderTestHeavyCount/2)
+                break;
         }
     }];
 }

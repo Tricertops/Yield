@@ -15,13 +15,19 @@
         }]; \
     }))
 
-#define yield   Yielder.self[(id)self] =
+#define yield(x) \
+    ((void)({ \
+        if ([Yielder shouldReturnAfterYielding:(x) fromTarget:(self)]) \
+            return; \
+    }))
+
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface Yielder<T> : NSEnumerator
 
 - (instancetype)initWithTarget:(NSObject *)target block:(void (^)(id))block;
++ (BOOL)shouldReturnAfterYielding:(nullable id)next fromTarget:(NSObject *)target;
 
 @end
 

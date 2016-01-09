@@ -24,12 +24,17 @@
 }
 
 - (void)produceLetters {
-    [self.recording appendString:@"A"];
-    yield @"B";
-    [self.recording appendString:@"C"];
-    yield @"D";
-    [self.recording appendString:@"E"];
-    yield @"F";
+    @try {
+        [self.recording appendString:@"A"];
+        yield(@"B");
+        [self.recording appendString:@"C"];
+        yield(@"D");
+        [self.recording appendString:@"E"];
+        yield(@"F");
+    }
+    @finally {
+        [self.recording appendString:@"X"];
+    }
 }
 
 - (void)test_yielding {
@@ -37,7 +42,7 @@
     for (NSString *letter in enumerator) {
         [self.recording appendString:letter];
     }
-    XCTAssertEqualObjects(self.recording, @"ABCDEF");
+    XCTAssertEqualObjects(self.recording, @"ABCDEFX");
     
     __weak NSEnumerator *weakEnumerator = enumerator;
     enumerator = nil;
@@ -51,7 +56,7 @@
         if (self.recording.length >= 4)
             break;
     }
-    XCTAssertEqualObjects(self.recording, @"ABCD");
+    XCTAssertEqualObjects(self.recording, @"ABCDX");
     
     __weak NSEnumerator *weakEnumerator = enumerator;
     enumerator = nil;
@@ -61,7 +66,7 @@
 - (void)test_collecting {
     NSEnumerator *enumerator = Yield(self, produceLetters);
     NSArray *objects = enumerator.allObjects;
-    XCTAssertEqualObjects(self.recording, @"ACE");
+    XCTAssertEqualObjects(self.recording, @"ACEX");
     XCTAssertEqualObjects([objects componentsJoinedByString:@""], @"BDF");
     
     __weak NSEnumerator *weakEnumerator = enumerator;
@@ -88,7 +93,7 @@ const NSUInteger YielderTestLightCount = 100000;
 
 - (void)produceLightObjects {
     for (NSUInteger index = 0; index < YielderTestLightCount; index ++) {
-        yield [self lightTask];
+        yield([self lightTask]);
     }
 }
 
@@ -170,7 +175,7 @@ const NSUInteger YielderTestHeavyCount = 1000;
 
 - (void)produceHeavyObjects {
     for (NSUInteger index = 0; index < YielderTestHeavyCount; index ++) {
-        yield [self heavyTask];
+        yield([self heavyTask]);
     }
 }
 

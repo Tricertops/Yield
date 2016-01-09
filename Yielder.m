@@ -85,11 +85,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark Next Object
 
-+ (void)setObject:(nullable id)value forKeyedSubscript:(NSObject *)target {
-    if (value == nil)
-        return; //! Skip yielded nils.
++ (BOOL)shouldReturnAfterYielding:(nullable id)next fromTarget:(NSObject *)target {
+    if (next == nil)
+        return NO; //! Skip yielded nils.
     
-    [[self associatedWithTarget:target] setNextObject:(id)value]; // Silence nullable warning.
+    Yielder *yielder = [self associatedWithTarget:target];
+    [yielder setNextObject:(id)next]; // Silence nullable warning.
+    return yielder->_isFinished;
 }
 
 @synthesize nextObject = _nextObject;

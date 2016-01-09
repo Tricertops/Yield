@@ -12,8 +12,8 @@
 
 @interface Yielder<T> : NSEnumerator
 
-- (instancetype)initWithBlock: (void (^)(Yielder*))block;
-- (void)setYield: (T)value;
+- (instancetype)initWithBlock:(void (^)(Yielder *))block;
+- (void)setYield:(T)value;
 
 @end
 

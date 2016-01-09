@@ -37,33 +37,33 @@
     }
 }
 
-- (void)test_yielding {
+- (void)test_enumeration {
     NSEnumerator *enumerator = Yield(self, produceLetters);
     for (NSString *letter in enumerator) {
         [self.recording appendString:letter];
     }
-    XCTAssertEqualObjects(self.recording, @"ABCDEFX");
-    
     __weak NSEnumerator *weakEnumerator = enumerator;
     enumerator = nil;
+    
+    XCTAssertEqualObjects(self.recording, @"ABCDEFX");
     XCTAssertNil(weakEnumerator, @"Should be deallocated.");
 }
 
-- (void)test_yielding_interrupted {
+- (void)test_enumeration_interrupted {
     NSEnumerator *enumerator = Yield(self, produceLetters);
     for (NSString *letter in enumerator) {
         [self.recording appendString:letter];
         if (self.recording.length >= 4)
             break;
     }
-    XCTAssertEqualObjects(self.recording, @"ABCDX");
-    
     __weak NSEnumerator *weakEnumerator = enumerator;
     enumerator = nil;
+    
+    XCTAssertEqualObjects(self.recording, @"ABCDX");
     XCTAssertNil(weakEnumerator, @"Should be deallocated.");
 }
 
-- (void)test_collecting {
+- (void)test_collecton {
     NSEnumerator *enumerator = Yield(self, produceLetters);
     NSArray *objects = enumerator.allObjects;
     XCTAssertEqualObjects(self.recording, @"ACEX");

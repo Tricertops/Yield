@@ -9,12 +9,27 @@
 /* Begin PBXBuildFile section */
 		5B757C191C40EE2300A93259 /* Yielder.h in Headers */ = {isa = PBXBuildFile; fileRef = 5B757C171C40EE2300A93259 /* Yielder.h */; };
 		5B757C1A1C40EE2300A93259 /* Yielder.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B757C181C40EE2300A93259 /* Yielder.m */; };
+		5B757C281C40F00E00A93259 /* Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B757C271C40F00E00A93259 /* Tests.m */; };
+		5B757C2A1C40F00E00A93259 /* libYielder.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5B757C0B1C40EDD000A93259 /* libYielder.a */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5B757C2B1C40F00E00A93259 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5B757C031C40EDD000A93259 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5B757C0A1C40EDD000A93259;
+			remoteInfo = Yielder;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		5B757C0B1C40EDD000A93259 /* libYielder.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libYielder.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		5B757C171C40EE2300A93259 /* Yielder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Yielder.h; sourceTree = SOURCE_ROOT; };
 		5B757C181C40EE2300A93259 /* Yielder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Yielder.m; sourceTree = SOURCE_ROOT; };
+		5B757C251C40F00E00A93259 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5B757C271C40F00E00A93259 /* Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Tests.m; sourceTree = "<group>"; };
+		5B757C291C40F00E00A93259 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -25,6 +40,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5B757C221C40F00E00A93259 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5B757C2A1C40F00E00A93259 /* libYielder.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -32,6 +55,7 @@
 			isa = PBXGroup;
 			children = (
 				5B757C0D1C40EDD000A93259 /* Sources */,
+				5B757C261C40F00E00A93259 /* Tests */,
 				5B757C0C1C40EDD000A93259 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,6 +64,7 @@
 			isa = PBXGroup;
 			children = (
 				5B757C0B1C40EDD000A93259 /* libYielder.a */,
+				5B757C251C40F00E00A93259 /* Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -52,6 +77,15 @@
 			);
 			name = Sources;
 			path = Yielder;
+			sourceTree = "<group>";
+		};
+		5B757C261C40F00E00A93259 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				5B757C271C40F00E00A93259 /* Tests.m */,
+				5B757C291C40F00E00A93259 /* Info.plist */,
+			);
+			path = Tests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -85,6 +119,24 @@
 			productReference = 5B757C0B1C40EDD000A93259 /* libYielder.a */;
 			productType = "com.apple.product-type.library.static";
 		};
+		5B757C241C40F00E00A93259 /* Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5B757C2D1C40F00E00A93259 /* Build configuration list for PBXNativeTarget "Tests" */;
+			buildPhases = (
+				5B757C211C40F00E00A93259 /* Sources */,
+				5B757C221C40F00E00A93259 /* Frameworks */,
+				5B757C231C40F00E00A93259 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5B757C2C1C40F00E00A93259 /* PBXTargetDependency */,
+			);
+			name = Tests;
+			productName = Tests;
+			productReference = 5B757C251C40F00E00A93259 /* Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -96,6 +148,9 @@
 				ORGANIZATIONNAME = "Martin Kiss";
 				TargetAttributes = {
 					5B757C0A1C40EDD000A93259 = {
+						CreatedOnToolsVersion = 7.2;
+					};
+					5B757C241C40F00E00A93259 = {
 						CreatedOnToolsVersion = 7.2;
 					};
 				};
@@ -113,9 +168,20 @@
 			projectRoot = "";
 			targets = (
 				5B757C0A1C40EDD000A93259 /* Yielder */,
+				5B757C241C40F00E00A93259 /* Tests */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		5B757C231C40F00E00A93259 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5B757C071C40EDD000A93259 /* Sources */ = {
@@ -126,7 +192,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5B757C211C40F00E00A93259 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5B757C281C40F00E00A93259 /* Tests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		5B757C2C1C40F00E00A93259 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5B757C0A1C40EDD000A93259 /* Yielder */;
+			targetProxy = 5B757C2B1C40F00E00A93259 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		5B757C121C40EDD000A93259 /* Debug */ = {
@@ -182,6 +264,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "-fno-fast-math";
+				OTHER_LDFLAGS = "-ObjC";
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = macosx;
 				WARNING_CFLAGS = (
@@ -237,6 +320,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CFLAGS = "-fno-fast-math";
+				OTHER_LDFLAGS = "-ObjC";
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = macosx;
 				WARNING_CFLAGS = (
@@ -262,6 +346,30 @@
 			};
 			name = Release;
 		};
+		5B757C2E1C40F00E00A93259 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Tests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.Tricertops.Yielder.Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		5B757C2F1C40F00E00A93259 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Tests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.Tricertops.Yielder.Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -279,6 +387,14 @@
 			buildConfigurations = (
 				5B757C151C40EDD000A93259 /* Debug */,
 				5B757C161C40EDD000A93259 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		5B757C2D1C40F00E00A93259 /* Build configuration list for PBXNativeTarget "Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5B757C2E1C40F00E00A93259 /* Debug */,
+				5B757C2F1C40F00E00A93259 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 		};

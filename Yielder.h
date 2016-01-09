@@ -8,7 +8,16 @@
 
 #import <Foundation/Foundation.h>
 
+#define Yield(target, invocation) \
+    ((NSEnumerator *)({ \
+        [[Yielder alloc] initWithTarget:target block:^(typeof(target) innerTarget) { \
+            [innerTarget invocation]; \
+        }]; \
+    }))
 
+#define yield   Yielder.self[(id)self] =
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface Yielder<T> : NSEnumerator
 
@@ -17,11 +26,4 @@
 
 @end
 
-#define Yield(target, invocation) \
-    ((NSEnumerator *)({ \
-        [[Yielder alloc] initWithTarget:target block:^(typeof(target) innerTarget) { \
-            [innerTarget invocation]; \
-        }]; \
-    }))
-
-#define yield   Yielder.self[(id)self] = 
+NS_ASSUME_NONNULL_END

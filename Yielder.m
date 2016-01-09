@@ -9,6 +9,8 @@
 @import ObjectiveC;
 #import "Yielder.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface Yielder ()
 
 @property (weak) NSObject *target;
@@ -65,13 +67,13 @@
 
 #pragma mark Next Object
 
-+ (void)setObject:(id)value forKeyedSubscript:(NSObject *)target {
++ (void)setObject:(nullable id)value forKeyedSubscript:(NSObject *)target {
     if (value == nil)
         return; //! Skip yielded nils.
     
     //TODO: Support multiple (recursive) enumerations at once.
     Yielder *yielder = objc_getAssociatedObject(target, Yielder.key);
-    [yielder setNextObject:value];
+    [yielder setNextObject:(id)value]; // Silence nullable warning.
 }
 
 @synthesize nextObject = _nextObject;
@@ -148,3 +150,5 @@
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

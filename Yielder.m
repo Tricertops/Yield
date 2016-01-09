@@ -32,11 +32,9 @@ NS_ASSUME_NONNULL_BEGIN
     return (__bridge void *)Yielder.class;
 }
 
-- (instancetype)initWithTarget:(__weak NSObject *)target block:(void (^)(id))block {
+- (instancetype)initWithTarget:(NSObject *)target block:(void (^)(id))block {
     self = [super init];
     if (self) {
-        objc_setAssociatedObject(target, Yielder.key, self, OBJC_ASSOCIATION_RETAIN);
-        
         dispatch_queue_t queue = dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL);
         dispatch_queue_t parent = dispatch_get_global_queue(qos_class_self(), 0);
         dispatch_set_target_queue(queue, parent);
@@ -46,14 +44,43 @@ NS_ASSUME_NONNULL_BEGIN
         self->_productionSemaphore = dispatch_semaphore_create(0);
         self->_finishingSemaphore = dispatch_semaphore_create(0);
         
+        [self associateWithTarget:target];
+        
+        __weak Yielder *weakSelf = self;
+        __weak NSObject *weakTarget = target;
         dispatch_async(queue, ^{
+            NSObject *target = weakTarget;
+            Yielder *self = weakSelf;
+            
             [self waitForProductionRequest];
             block(target);
-            [self signalFinish];
+            [self deassociateFromTarget:target];
             [self allowConsumption];
+            [self requestProduction];
+            [self signalFinish];
         });
     }
     return self;
+}
+
+- (void)associateWithTarget:(NSObject *)target {
+    NSHashTable *weakStorage = [NSHashTable weakObjectsHashTable];
+    [weakStorage addObject:self];
+    objc_setAssociatedObject(target, Yielder.key, weakStorage, OBJC_ASSOCIATION_RETAIN);
+}
+
+- (void)deassociateFromTarget:(NSObject *)target {
+    objc_setAssociatedObject(target, Yielder.key, nil, OBJC_ASSOCIATION_ASSIGN);
+}
+
++ (nullable Yielder *)associatedWithTarget:(NSObject *)target {
+    //TODO: Support multiple (recursive) enumerations at once.
+    NSHashTable<Yielder *> *storage = objc_getAssociatedObject(target, Yielder.key);
+    return storage.anyObject;
+}
+
+- (void)dealloc {
+    [self waitForFinish];
 }
 
 #pragma mark Next Object
@@ -62,9 +89,7 @@ NS_ASSUME_NONNULL_BEGIN
     if (value == nil)
         return; //! Skip yielded nils.
     
-    //TODO: Support multiple (recursive) enumerations at once.
-    Yielder *yielder = objc_getAssociatedObject(target, Yielder.key);
-    [yielder setNextObject:(id)value]; // Silence nullable warning.
+    [[self associatedWithTarget:target] setNextObject:(id)value]; // Silence nullable warning.
 }
 
 @synthesize nextObject = _nextObject;

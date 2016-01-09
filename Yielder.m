@@ -46,17 +46,17 @@ NS_ASSUME_NONNULL_BEGIN
         
         [self associateWithTarget:target];
         
-        __weak Yielder *weakSelf = self;
-        __weak NSObject *weakTarget = target;
+        __unsafe_unretained Yielder *weakSelf = self;
+        __unsafe_unretained NSObject *weakTarget = target;
         dispatch_async(queue, ^{
             NSObject *target = weakTarget;
-            Yielder *self = weakSelf;
+            __unsafe_unretained Yielder *self = weakSelf;
             
             [self waitForProductionRequest];
             block(target);
             [self deassociateFromTarget:target];
+            self->_isFinished = YES;
             [self allowConsumption];
-            [self requestProduction];
             [self signalFinish];
         });
     }
@@ -64,9 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 - (void)associateWithTarget:(NSObject *)target {
-    NSHashTable *weakStorage = [NSHashTable weakObjectsHashTable];
-    [weakStorage addObject:self];
-    objc_setAssociatedObject(target, Yielder.key, weakStorage, OBJC_ASSOCIATION_RETAIN);
+    objc_setAssociatedObject(target, Yielder.key, self, OBJC_ASSOCIATION_ASSIGN);
 }
 
 - (void)deassociateFromTarget:(NSObject *)target {
@@ -75,12 +73,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable Yielder *)associatedWithTarget:(NSObject *)target {
     //TODO: Support multiple (recursive) enumerations at once.
-    NSHashTable<Yielder *> *storage = objc_getAssociatedObject(target, Yielder.key);
-    return storage.anyObject;
+    return objc_getAssociatedObject(target, Yielder.key);
 }
 
 - (void)dealloc {
-    [self waitForFinish];
+    if ( ! self->_isFinished) {        
+        self->_isFinished = YES;
+        [self requestProduction];
+        dispatch_semaphore_wait(self->_finishingSemaphore, DISPATCH_TIME_FOREVER);
+    }
 }
 
 #pragma mark Next Object
@@ -89,7 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
     if (next == nil)
         return NO; //! Skip yielded nils.
     
-    Yielder *yielder = [self associatedWithTarget:target];
+    __unsafe_unretained Yielder *yielder = [self associatedWithTarget:target];
     [yielder setNextObject:(id)next]; // Silence nullable warning.
     return yielder->_isFinished;
 }
@@ -166,7 +167,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)signalFinish {
     self->_isFinished = YES;
-    dispatch_semaphore_signal(self->_finishingSemaphore);
+    if (self->_finishingSemaphore)
+        dispatch_semaphore_signal(self->_finishingSemaphore);
 }
 
 @end

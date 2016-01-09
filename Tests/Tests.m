@@ -17,6 +17,8 @@
 
 @implementation Tests
 
+#pragma mark Functional Tests
+
 - (void)setUp {
     self.recording = [NSMutableString new];
 }
@@ -67,75 +69,120 @@
     XCTAssertNil(weakEnumerator, @"Should be deallocated.");
 }
 
+
+#pragma mark Light Speed Tests
+
+const NSUInteger YielderTestLightCount = 100000;
+
+- (id)lightTask {
+    return [NSDateFormatter new];
+}
+
+- (void)test_light_task {
+    [self measureBlock:^{
+        for (NSUInteger i = 0; i < 10000; i ++) {
+            [self lightTask];
+        }
+    }];
+}
+
+- (void)produceLightObjects {
+    for (NSUInteger index = 0; index < YielderTestLightCount; index ++) {
+        yield [self lightTask];
+    }
+}
+
+- (NSArray *)buildLightArray {
+    NSMutableArray *array = [NSMutableArray new];
+    for (NSUInteger index = 0; index < YielderTestLightCount; index ++) {
+        [array addObject:[self lightTask]];
+    }
+    return array;
+}
+
+- (void)test_light_yield_enumeration {
+    [self measureBlock:^{
+        for (id object in Yield(self, produceLightObjects)) {
+            [object self];
+        }
+    }];
+}
+- (void)test_light_array_enumeration {
+    [self measureBlock:^{
+        for (id object in [self buildLightArray]) {
+            [object self];
+        }
+    }];
+}
+
+- (void)test_light_yield_collection {
+    [self measureBlock:^{
+        __unused NSArray *array = Yield(self, produceLightObjects).allObjects;
+    }];
+}
+- (void)test_light_array_collection {
+    [self measureBlock:^{
+        __unused NSArray *array = [self buildLightArray];
+    }];
+}
+
+#pragma mark Heavy Speed tests
+
+const NSUInteger YielderTestHeavyCount = 1000;
+
 - (id)heavyTask {
     for (NSUInteger i = 0; i < 200; i ++) {
         [NSDateFormatter new];
     }
-    return [NSDateFormatter new];
+    return [self lightTask];
 }
 
-- (void)test_speedOfHeavyTask {
+- (void)test_heavy_task {
     [self measureBlock:^{
-        for (NSUInteger i = 0; i < 20; i ++) {
+        for (NSUInteger i = 0; i < 100; i ++) {
             [self heavyTask];
         }
     }];
 }
 
-const NSUInteger YielderTestCount = 1000;
-
-- (void)produceObjects {
-    for (NSUInteger index = 0; index < YielderTestCount; index ++) {
+- (void)produceHeavyObjects {
+    for (NSUInteger index = 0; index < YielderTestHeavyCount; index ++) {
         yield [self heavyTask];
     }
 }
 
-- (NSArray *)buildArray {
+- (NSArray *)buildHeavyArray {
     NSMutableArray *array = [NSMutableArray new];
-    for (NSUInteger index = 0; index < YielderTestCount; index ++) {
+    for (NSUInteger index = 0; index < YielderTestHeavyCount; index ++) {
         [array addObject:[self heavyTask]];
     }
     return array;
 }
 
-- (void)test_speedOfYield_enumeration {
-    __block NSUInteger count = 0;
+- (void)test_heavy_yield_enumeration {
     [self measureBlock:^{
-        count = 0;
-        for (id object in Yield(self, produceObjects)) {
+        for (id object in Yield(self, produceHeavyObjects)) {
             [object self];
-            count ++;
         }
     }];
-    XCTAssertEqual(count, YielderTestCount);
 }
-
-- (void)test_speedOfYield_collection {
-    __block NSArray *array = nil;
+- (void)test_heavy_array_enumeration {
     [self measureBlock:^{
-        array = Yield(self, produceObjects).allObjects;
-    }];
-    XCTAssertEqual(array.count, YielderTestCount);
-}
-
-- (void)test_speedOfArray_enumeration {
-    __block NSUInteger count = 0;
-    [self measureBlock:^{
-        count = 0;
-        for (id object in [self buildArray]) {
+        for (id object in [self buildHeavyArray]) {
             [object self];
-            count ++;
         }
     }];
-    XCTAssertEqual(count, YielderTestCount);
 }
 
-- (void)test_speedOfArray_collection {
-    __block NSArray *array = nil;
+- (void)test_heavy_yield_collection {
     [self measureBlock:^{
-        array = [self buildArray];
+        __unused NSArray *array = Yield(self, produceHeavyObjects).allObjects;
     }];
-    XCTAssertEqual(array.count, YielderTestCount);
+}
+- (void)test_heavy_array_collection {
+    [self measureBlock:^{
+        __unused NSArray *array = [self buildHeavyArray];
+    }];
 }
 
 @end

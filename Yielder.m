@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
         objc_setAssociatedObject(target, Yielder.key, self, OBJC_ASSOCIATION_RETAIN);
         
         dispatch_queue_t queue = dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL);
-        dispatch_queue_t parent = dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0);
+        dispatch_queue_t parent = dispatch_get_global_queue(qos_class_self(), 0);
         dispatch_set_target_queue(queue, parent);
         self->_queue = queue;
         

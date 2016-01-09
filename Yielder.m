@@ -15,12 +15,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property id nextObject;
 @property NSMutableArray *remainingObjects;
-@property BOOL isFinished;
+@property BOOL shouldTerminate;
 
 @property dispatch_queue_t queue;
-@property dispatch_semaphore_t consumptionSemaphore;
-@property dispatch_semaphore_t productionSemaphore;
-@property dispatch_semaphore_t finishingSemaphore;
+@property dispatch_group_t execution;
+@property dispatch_semaphore_t productionEnter;
+@property dispatch_semaphore_t productionLeave;
 
 @end
 
@@ -40,11 +40,12 @@ NS_ASSUME_NONNULL_BEGIN
         dispatch_set_target_queue(queue, parent);
         self->_queue = queue;
         
-        self->_consumptionSemaphore = dispatch_semaphore_create(0);
-        self->_productionSemaphore = dispatch_semaphore_create(0);
-        self->_finishingSemaphore = dispatch_semaphore_create(0);
+        self->_execution = dispatch_group_create();
+        self->_productionEnter = dispatch_semaphore_create(0);
+        self->_productionLeave = dispatch_semaphore_create(0);
         
         [self associateWithTarget:target];
+        dispatch_group_enter(self->_execution); //! Don’t wait for async to start.
         
         __unsafe_unretained Yielder *weakSelf = self;
         __unsafe_unretained NSObject *weakTarget = target;
@@ -52,12 +53,14 @@ NS_ASSUME_NONNULL_BEGIN
             NSObject *target = weakTarget;
             __unsafe_unretained Yielder *self = weakSelf;
             
-            [self waitForProductionRequest];
-            block(target);
+            dispatch_semaphore_wait(self->_productionEnter, DISPATCH_TIME_FOREVER);
+            if ( ! self->_shouldTerminate) {
+                block(target);
+            }
             [self deassociateFromTarget:target];
-            self->_isFinished = YES;
-            [self allowConsumption];
-            [self signalFinish];
+            self->_shouldTerminate = YES;
+            dispatch_semaphore_signal(self->_productionLeave);
+            dispatch_group_leave(self->_execution);
         });
     }
     return self;
@@ -77,11 +80,9 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 - (void)dealloc {
-    if ( ! self->_isFinished) {        
-        self->_isFinished = YES;
-        [self requestProduction];
-        dispatch_semaphore_wait(self->_finishingSemaphore, DISPATCH_TIME_FOREVER);
-    }
+    self->_shouldTerminate = YES;
+    dispatch_semaphore_signal(self->_productionEnter);
+    dispatch_group_wait(self->_execution, DISPATCH_TIME_FOREVER);
 }
 
 #pragma mark Next Object
@@ -92,19 +93,19 @@ NS_ASSUME_NONNULL_BEGIN
     
     __unsafe_unretained Yielder *yielder = [self associatedWithTarget:target];
     [yielder setNextObject:(id)next]; // Silence nullable warning.
-    return yielder->_isFinished;
+    return yielder->_shouldTerminate;
 }
 
 @synthesize nextObject = _nextObject;
 
 - (BOOL)hasNextObject {
-    return (self->_nextObject != nil || self->_isFinished);
+    return (self->_nextObject != nil || self->_shouldTerminate);
 }
 
 - (id)nextObject {
     while ( ! [self hasNextObject]) {
-        [self requestProduction];
-        [self waitForConsumption];
+        dispatch_semaphore_signal(self->_productionEnter);
+        dispatch_semaphore_wait(self->_productionLeave, DISPATCH_TIME_FOREVER);
     }
     id next = self->_nextObject;
     self->_nextObject = nil; //! Nullify for next call.
@@ -113,13 +114,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setNextObject:(id)next {
     if (self->_remainingObjects) {
-        if (next)
-            [self->_remainingObjects addObject:next];
+        [self->_remainingObjects addObject:next];
     }
     else {
         self->_nextObject = next;
-        [self allowConsumption];
-        [self waitForProductionRequest];
+        dispatch_semaphore_signal(self->_productionLeave);
+        dispatch_semaphore_wait(self->_productionEnter, DISPATCH_TIME_FOREVER);
     }
 }
 
@@ -127,49 +127,13 @@ NS_ASSUME_NONNULL_BEGIN
     NSMutableArray *remaining = [NSMutableArray new];
     self->_remainingObjects = remaining;
     
-    [self requestProduction];
-    [self waitForFinish];
+    dispatch_semaphore_signal(self->_productionEnter);
+    dispatch_group_wait(self->_execution, DISPATCH_TIME_FOREVER);
     
     self->_remainingObjects = nil;
     return remaining;
 }
 
-#pragma mark Semaphores
-
-- (void)waitForProductionRequest {
-    if (self->_isFinished)
-        return;
-    
-    dispatch_semaphore_wait(self->_productionSemaphore, DISPATCH_TIME_FOREVER);
-}
-
-- (void)requestProduction {
-    dispatch_semaphore_signal(self->_productionSemaphore);
-}
-
-- (void)waitForConsumption {
-    if (self->_isFinished)
-        return;
-    
-    dispatch_semaphore_wait(self->_consumptionSemaphore, DISPATCH_TIME_FOREVER);
-}
-
-- (void)allowConsumption {
-    dispatch_semaphore_signal(self->_consumptionSemaphore);
-}
-
-- (void)waitForFinish {
-    if (self->_isFinished)
-        return;
-    
-    dispatch_semaphore_wait(self->_finishingSemaphore, DISPATCH_TIME_FOREVER);
-}
-
-- (void)signalFinish {
-    self->_isFinished = YES;
-    if (self->_finishingSemaphore)
-        dispatch_semaphore_signal(self->_finishingSemaphore);
-}
 
 @end
 

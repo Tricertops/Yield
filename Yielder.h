@@ -8,6 +8,13 @@
 
 #import <Foundation/Foundation.h>
 
-@interface Yielder : NSObject
+
+
+@interface Yielder<T> : NSEnumerator
+
+- (instancetype)initWithBlock: (void (^)(Yielder*))block;
+- (void)setYield: (T)value;
 
 @end
+
+#define yield   (yielder.yield) = 

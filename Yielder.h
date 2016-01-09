@@ -22,7 +22,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface Yielder<T> : NSEnumerator
 
 - (instancetype)initWithTarget:(NSObject *)target block:(void (^)(id))block;
-+ (void)setObject:(id)object forKeyedSubscript:(id)key;
 
 @end
 

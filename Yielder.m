@@ -13,9 +13,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface Yielder ()
 
-@property (weak) NSObject *target;
-@property (copy) void (^block)(id);
-
 @property id nextObject;
 @property NSMutableArray *remainingObjects;
 @property BOOL isFinished;
@@ -35,34 +32,28 @@ NS_ASSUME_NONNULL_BEGIN
     return (__bridge void *)Yielder.class;
 }
 
-- (instancetype)initWithTarget:(NSObject *)target block:(void (^)(id))block {
+- (instancetype)initWithTarget:(__weak NSObject *)target block:(void (^)(id))block {
     self = [super init];
     if (self) {
-        self->_target = target;
-        self->_block = block;
         objc_setAssociatedObject(target, Yielder.key, self, OBJC_ASSOCIATION_RETAIN);
         
-        [self start];
+        dispatch_queue_t queue = dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL);
+        dispatch_queue_t parent = dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0);
+        dispatch_set_target_queue(queue, parent);
+        self->_queue = queue;
+        
+        self->_consumptionSemaphore = dispatch_semaphore_create(0);
+        self->_productionSemaphore = dispatch_semaphore_create(0);
+        self->_finishingSemaphore = dispatch_semaphore_create(0);
+        
+        dispatch_async(queue, ^{
+            [self waitForProductionRequest];
+            block(target);
+            [self signalFinish];
+            [self allowConsumption];
+        });
     }
     return self;
-}
-
-- (void)start {
-    dispatch_queue_t queue = dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL);
-    dispatch_queue_t parent = dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0);
-    dispatch_set_target_queue(queue, parent);
-    self->_queue = queue;
-    
-    self->_consumptionSemaphore = dispatch_semaphore_create(0);
-    self->_productionSemaphore = dispatch_semaphore_create(0);
-    self->_finishingSemaphore = dispatch_semaphore_create(0);
-    
-    dispatch_async(queue, ^{
-        [self waitForProductionRequest];
-        self->_block(self->_target);
-        [self signalFinish];
-        [self allowConsumption];
-    });
 }
 
 #pragma mark Next Object
@@ -107,8 +98,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSArray *)allObjects {
     NSMutableArray *remaining = [NSMutableArray new];
     self->_remainingObjects = remaining;
+    
     [self requestProduction];
     [self waitForFinish];
+    
     self->_remainingObjects = nil;
     return remaining;
 }

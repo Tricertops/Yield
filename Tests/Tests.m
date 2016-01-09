@@ -44,7 +44,7 @@
 }
 
 - (id)heavyTask {
-    for (NSUInteger i = 0; i < 2000; i ++) {
+    for (NSUInteger i = 0; i < 200; i ++) {
         [NSDateFormatter new];
     }
     return [NSDateFormatter new];
@@ -58,52 +58,69 @@
     }];
 }
 
-- (void)produceObjects: (NSUInteger)count {
-    for (NSUInteger index = 0; index < count; index ++) {
+const NSUInteger YielderTestCount = 1000;
+
+- (void)produceObjects {
+    for (NSUInteger index = 0; index < YielderTestCount; index ++) {
         yield [self heavyTask];
     }
 }
 
-- (NSArray *)buildArray: (NSUInteger)count {
+- (void)buildArray {
     NSMutableArray *array = [NSMutableArray new];
-    for (NSUInteger index = 0; index < count; index ++) {
+    for (NSUInteger index = 0; index < YielderTestCount; index ++) {
         [array addObject:[self heavyTask]];
     }
-    return array;
+    yield array;
 }
 
-const NSUInteger count = 1000;
-
 - (void)test_speedOfYield_enumeration {
+    dispatch_qos_class_t qos = qos_class_self();
+    __block NSUInteger count = 0;
     [self measureBlock:^{
-        for (id object in Yield(self, produceObjects:count)) {
+        count = 0;
+        for (id object in Yield(self, produceObjects)) {
             [object self];
+            count ++;
         }
     }];
+    XCTAssertEqual(count, YielderTestCount);
+    XCTAssertEqual(qos_class_self(), qos);
 }
 
 - (void)test_speedOfYield_collection {
-    __block NSArray *x = nil;
+    dispatch_qos_class_t qos = qos_class_self();
+    __block NSArray *array = nil;
     [self measureBlock:^{
-        x = Yield(self, produceObjects:count).allObjects;
+        array = Yield(self, produceObjects).allObjects;
     }];
-    [x makeObjectsPerformSelector:@selector(self)];
+    XCTAssertEqual(array.count, YielderTestCount);
+    XCTAssertEqual(qos_class_self(), qos);
 }
 
 - (void)test_speedOfArray_enumeration {
+    dispatch_qos_class_t qos = qos_class_self();
+    __block NSUInteger count = 0;
     [self measureBlock:^{
-        for (id object in [self buildArray:count]) {
+        count = 0;
+        NSArray *array = Yield(self, buildArray).nextObject; // This way it’s built on another queue.
+        for (id object in array) {
             [object self];
+            count ++;
         }
     }];
+    XCTAssertEqual(count, YielderTestCount);
+    XCTAssertEqual(qos_class_self(), qos);
 }
 
 - (void)test_speedOfArray_collection {
-    __block NSArray *x = nil;
+    dispatch_qos_class_t qos = qos_class_self();
+    __block NSArray *array = nil;
     [self measureBlock:^{
-        x = [self buildArray:count];
+        array = Yield(self, buildArray).nextObject; // This way it’s built on another queue.
     }];
-    [x makeObjectsPerformSelector:@selector(self)];
+    XCTAssertEqual(array.count, YielderTestCount);
+    XCTAssertEqual(qos_class_self(), qos);
 }
 
 @end

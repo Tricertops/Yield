@@ -11,28 +11,36 @@
 
 @interface Tests : XCTestCase
 
+@property NSMutableString *recording;
+
 @end
 
 @implementation Tests
 
-- (void)executeWithYielder:(Yielder<NSString *> *)yielder argument:(NSString *)suffix {
-    NSLog(@"Sending: A");
-    yield @"A";
-    NSLog(@"Sending: B");
+- (void)setUp {
+    self.recording = [NSMutableString new];
+}
+
+- (void)produceLetters {
+    [self.recording appendString:@"A"];
     yield @"B";
-    NSLog(@"Sending: C");
-    yield @"C";
-    NSLog(@"Sending: %@", suffix);
-    yield suffix;
+    [self.recording appendString:@"C"];
+    yield @"D";
+    [self.recording appendString:@"E"];
+    yield @"F";
 }
 
 - (void)test_yielding {
-    Yielder<NSString *> *yielder = [[Yielder alloc] initWithBlock:^(Yielder *yielder) {
-        [self executeWithYielder:yielder argument:@"Done!"];
-    }];
-    for (NSString *value in yielder) {
-        NSLog(@"Received: %@", value);
+    for (NSString *letter in Yield(self, produceLetters)) {
+        [self.recording appendString:letter];
     }
+    XCTAssertEqualObjects(self.recording, @"ABCDEF");
+}
+
+- (void)test_collecting {
+    NSArray *objects = Yield(self, produceLetters).allObjects;
+    XCTAssertEqualObjects(self.recording, @"ACE");
+    XCTAssertEqualObjects([objects componentsJoinedByString:@""], @"BDF");
 }
 
 @end

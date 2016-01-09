@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-#define Yield(target, invocation) \
+#define Yieldable(target, invocation) \
     ((NSEnumerator *)({ \
         [[Yielder alloc] initWithTarget:target block:^(typeof(target) innerTarget) { \
             [innerTarget invocation]; \

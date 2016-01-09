@@ -38,7 +38,7 @@
 }
 
 - (void)test_enumeration {
-    NSEnumerator *enumerator = Yield(self, produceLetters);
+    NSEnumerator *enumerator = Yieldable(self, produceLetters);
     for (NSString *letter in enumerator) {
         [self.recording appendString:letter];
     }
@@ -50,7 +50,7 @@
 }
 
 - (void)test_enumeration_interrupted {
-    NSEnumerator *enumerator = Yield(self, produceLetters);
+    NSEnumerator *enumerator = Yieldable(self, produceLetters);
     for (NSString *letter in enumerator) {
         [self.recording appendString:letter];
         if (self.recording.length >= 4)
@@ -64,7 +64,7 @@
 }
 
 - (void)test_collecton {
-    NSEnumerator *enumerator = Yield(self, produceLetters);
+    NSEnumerator *enumerator = Yieldable(self, produceLetters);
     NSArray *objects = enumerator.allObjects;
     XCTAssertEqualObjects(self.recording, @"ACEX");
     XCTAssertEqualObjects([objects componentsJoinedByString:@""], @"BDF");
@@ -108,7 +108,7 @@ const NSUInteger YielderTestLightCount = 100000;
 - (void)test_light_yield_enumeration {
     //! This test fails to show how slower it is in comparison to NSArray.
     [self measureBlock:^{
-        for (id object in Yield(self, produceLightObjects)) {
+        for (id object in Yieldable(self, produceLightObjects)) {
             [object self];
         }
     }];
@@ -125,7 +125,7 @@ const NSUInteger YielderTestLightCount = 100000;
     //! This test fails to show how slower it is in comparison to NSArray.
     [self measureBlock:^{
         NSUInteger passed = 0;
-        for (id object in Yield(self, produceLightObjects)) {
+        for (id object in Yieldable(self, produceLightObjects)) {
             [object self];
             passed ++;
             if (passed > YielderTestLightCount/2)
@@ -147,7 +147,7 @@ const NSUInteger YielderTestLightCount = 100000;
 
 - (void)test_light_yield_collection {
     [self measureBlock:^{
-        __unused NSArray *array = Yield(self, produceLightObjects).allObjects;
+        __unused NSArray *array = Yieldable(self, produceLightObjects).allObjects;
     }];
 }
 - (void)test_light_array_collection {
@@ -191,7 +191,7 @@ const NSUInteger YielderTestHeavyCount = 1000;
 
 - (void)test_heavy_yield_enumeration {
     [self measureBlock:^{
-        for (id object in Yield(self, produceHeavyObjects)) {
+        for (id object in Yieldable(self, produceHeavyObjects)) {
             [object self];
         }
     }];
@@ -207,7 +207,7 @@ const NSUInteger YielderTestHeavyCount = 1000;
 - (void)test_heavy_yield_enumeration_interrupted {
     [self measureBlock:^{
         NSUInteger passed = 0;
-        for (id object in Yield(self, produceHeavyObjects)) {
+        for (id object in Yieldable(self, produceHeavyObjects)) {
             [object self];
             passed ++;
             if (passed > YielderTestHeavyCount/2)
@@ -229,7 +229,7 @@ const NSUInteger YielderTestHeavyCount = 1000;
 
 - (void)test_heavy_yield_collection {
     [self measureBlock:^{
-        __unused NSArray *array = Yield(self, produceHeavyObjects).allObjects;
+        __unused NSArray *array = Yieldable(self, produceHeavyObjects).allObjects;
     }];
 }
 - (void)test_heavy_array_collection {

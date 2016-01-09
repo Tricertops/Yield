@@ -106,6 +106,7 @@ const NSUInteger YielderTestLightCount = 100000;
 }
 
 - (void)test_light_yield_enumeration {
+    //! This test fails to show how slower it is in comparison to NSArray.
     [self measureBlock:^{
         for (id object in Yield(self, produceLightObjects)) {
             [object self];
@@ -121,6 +122,7 @@ const NSUInteger YielderTestLightCount = 100000;
 }
 
 - (void)test_light_yield_enumeration_interrupted {
+    //! This test fails to show how slower it is in comparison to NSArray.
     [self measureBlock:^{
         NSUInteger passed = 0;
         for (id object in Yield(self, produceLightObjects)) {

@@ -27,11 +27,11 @@ On output, they have proper order (newlines removed):
 
 >A B C D E F
 
-The `yield` macro uses _magic_ to pass value to the enumeration and continues execution when needed.
+The `yield` macro uses _magic_ to pass value to the enumeration and continues execution when needed. The _magic_ is invoking the method on another queue and interrupting its execution.
 
 Usage
 -----
-1. Implement a method with `void` return value and **any arguments**.
+1. Implement a method with `void` return value and **any arguments**. This method will be called from another queue, but **mutually exclusive** with the caller queue, never consurrently.
 2. Use `yield(x)` to output any number of values. This macro needs ability to call `return`, so don’t call it from nested blocks or called functions.
 3. Use `Yieldable(…)` macro in `for-in` statement. Arguments to this macro are similar to calling the method directly, here’s the example:
 

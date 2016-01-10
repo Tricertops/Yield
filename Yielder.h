@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
+//! Used to wrap method call in NSEnumerator that can be used in for-in loop. Example: for (id x in Yieldable(self, produceObjects:100)) {…}
 #define Yieldable(target, invocation) \
     ((NSEnumerator *)({ \
         [[Yielder alloc] initWithTarget:target block:^(typeof(target) innerTarget) { \
@@ -15,6 +16,7 @@
         }]; \
     }))
 
+//! Use from within a void method to produce multiple values.
 #define yield(x) \
     ((void)({ \
         if ([Yielder shouldReturnAfterYielding:(x) fromTarget:(self)]) \
@@ -24,10 +26,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+//! Internal class with the multithreading logic.
 @interface Yielder<T> : NSEnumerator
 
 - (instancetype)initWithTarget:(NSObject *)target block:(void (^)(id))block;
-+ (BOOL)shouldReturnAfterYielding:(nullable id)next fromTarget:(NSObject *)target;
++ (BOOL)shouldReturnAfterYielding:(nullable T)next fromTarget:(NSObject *)target;
 
 @end
 
